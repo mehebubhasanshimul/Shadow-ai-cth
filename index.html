@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=VT323&display=swap');
+        body { font-family: 'VT323', monospace; }
+        .joker-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)),
+                        url('https://media.giphy.com/media/7waKDy5RbDYVG/giphy.gif') center/cover;
+            z-index: -2;
+        }
+        .logo-gif { width: 130px; height: 130px; border: 4px solid #ff00ff; border-radius: 9999px; box-shadow: 0 0 50px #ff00ff; }
+        .title { font-family: 'Creepster', cursive; text-shadow: 0 0 30px #ff00ff, 0 0 60px #00ff41; }
+    </style>
+</head>
+<body class="text-[#00ff41]">
+
+    <div class="joker-bg"></div>
+    <canvas id="matrix" class="fixed inset-0 z-[-1] opacity-20"></canvas>
+
+    <header class="fixed w-full z-50 bg-black/80 backdrop-blur border-b border-purple-500">
+        <div class="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-5">
+                <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="logo-gif">
+                <div>
+                    <h1 class="title text-5xl">SHADOW AI</h1>
+                    <p class="text-purple-400">CHAOS • IMAGE • VIDEO</p>
+                </div>
+            </div>
+            <button onclick="clearChat()" class="px-8 py-3 border border-red-500 text-red-400 hover:bg-red-600 hover:text-black">RESET CHAOS</button>
+        </div>
+    </header>
+
+    <div class="pt-28 flex h-screen">
+        <div class="flex-1 max-w-5xl mx-auto flex flex-col">
+            <div id="chatContainer" class="flex-1 overflow-y-auto p-8 space-y-8"></div>
+
+            <!-- Input + Buttons -->
+            <div class="p-6 bg-black/90 border-t-4 border-purple-600">
+                <div class="flex gap-3 mb-4">
+                    <button onclick="setMode('text')" id="btn-text" class="flex-1 py-3 bg-purple-700 hover:bg-purple-600">💬 Text</button>
+                    <button onclick="setMode('image')" id="btn-image" class="flex-1 py-3 bg-pink-700 hover:bg-pink-600">🖼️ Image</button>
+                    <button onclick="setMode('video')" id="btn-video" class="flex-1 py-3 bg-red-700 hover:bg-red-600">🎥 Video</button>
+                </div>
+                
+                <div class="relative">
+                    <textarea id="userInput" rows="3" class="w-full bg-black border-2 border-[#00ff41] p-6 text-xl" placeholder="Describe what you want..."></textarea>
+                    <button onclick="sendMessage()" class="absolute bottom-6 right-6 bg-white text-black px-10 py-5 font-bold">GENERATE CHAOS →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY_HERE";
+        let mode = "text"; // text, image, video
+        let history = [];
+
+        // Matrix Rain (same as before)
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = "01JOKERCHAOS";
+        const fontSize = 14;
+        const columns = canvas.width/fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + "px monospace";
+            for(let i = 0; i < drops.length; i++){
+                ctx.fillText(chars[Math.floor(Math.random()*chars.length)], i*fontSize, drops[i]*fontSize);
+                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('ring-4', 'ring-white'));
+            document.getElementById(`btn-${m}`).classList.add('ring-4', 'ring-white');
+        }
+
+        function addMessage(text, isUser, imageUrl = null) {
+            const chat = document.getElementById('chatContainer');
+            const div = document.createElement('div');
+            div.className = isUser ? 'flex justify-end' : 'flex gap-4';
+
+            let content = isUser ? 
+                `<div class="max-w-xl bg-black/70 border border-[#00ff41] p-5">${text}</div>` : 
+                `<div>
+                    <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-12 h-12 rounded-full">
+                    <div class="max-w-2xl bg-black/80 border border-purple-500 p-6">${text}</div>
+                 </div>`;
+
+            if (imageUrl) {
+                content += `<img src="${imageUrl}" class="max-w-lg mt-4 rounded border border-purple-400">`;
+            }
+
+            div.innerHTML = content;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            let prompt = input.value.trim();
+            if (!prompt) return;
+
+            addMessage(prompt, true);
+            history.push({role: "user", content: prompt});
+            input.value = "";
+
+            const loading = document.createElement('div');
+            loading.innerHTML = `<div class="flex gap-4"><img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-12 h-12"><div class="p-6 border border-purple-500">Generating ${mode}...</div></div>`;
+            document.getElementById('chatContainer').appendChild(loading);
+
+            try {
+                let responseText = "Chaos created.";
+
+                if (mode === "image" || mode === "video") {
+                    responseText = `Here's your \( {mode} based on: " \){prompt}"`;
+                    // In real implementation, you would call Imagen 3 or Veo via Google API
+                    // For now using placeholder
+                    const fakeUrl = mode === "image" ? 
+                        `https://picsum.photos/id/${Math.floor(Math.random()*100)}/800/600` : 
+                        "https://media.giphy.com/media/7waKDy5RbDYVG/giphy.gif";
+                    
+                    addMessage(responseText, false, fakeUrl);
+                } else {
+                    // Normal text chat
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await res.json();
+                    responseText = data.candidates[0].content.parts[0].text;
+                    addMessage(responseText, false);
+                }
+            } catch(e) {
+                addMessage("THE JOKER LAUGHED... TRY AGAIN.", false);
+            }
+            loading.remove();
+        }
+
+        function clearChat() {
+            if(confirm("ERASE ALL CHAOS?")) {
+                document.getElementById('chatContainer').innerHTML = '';
+                history = [];
+            }
+        }
+
+        // Default mode
+        setMode('text');
+    </script>
+</body>
+</html>
