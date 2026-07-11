@@ -1,52 +1,34 @@
-async function sendMessage() {
-    const input = document.getElementById('userInput');
-    let prompt = input.value.trim();
-    if (!prompt) return;
-
-    addMessage(prompt, true);
-    input.value = "";
-
-    const loadingId = 'loading-' + Date.now();
-    const chat = document.getElementById('chatContainer');
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = loadingId;
-    loadingDiv.className = 'flex gap-4 animate-pulse';
-    loadingDiv.innerHTML = `
-        <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 opacity-50">
-        <div class="glass-bot p-4 text-[#00ff41] font-matrix tracking-widest text-lg flex items-center gap-2">
-            <i class="fas fa-circle-notch fa-spin"></i> GENERATING CHAOS...
-        </div>`;
-    chat.appendChild(loadingDiv);
-    chat.scrollTop = chat.scrollHeight;
-
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  
+    const { prompt } = req.body;
+    const GROQ_API_KEY = process.env.GROQ_API_KEY; 
+  
+    const options = {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'llama3-8b-8192', // Groq-এর জনপ্রিয় মডেল
+            temperature: 0.7,
+            max_tokens: 500
+        })
+    };
+  
     try {
-        const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
-        });
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', options);
+        const data = await response.json();
         
-        const data = await res.json();
-        
-        if (document.getElementById(loadingId)) {
-            document.getElementById(loadingId).remove();
+        // রেসপন্স চেক
+        if (data.choices) {
+            res.status(200).json(data);
+        } else {
+            res.status(400).json(data);
         }
-
-        // সফল হলে চ্যাট দেখাবে
-        if (data.choices && data.choices.length > 0) {
-            const responseText = data.choices[0].message.content;
-            addMessage(responseText, false);
-        } 
-        // ব্যর্থ হলে সরাসরি ডাটাটি স্ক্রিনে লাল বক্সে দেখাবে
-        else {
-            const debugText = JSON.stringify(data, null, 2);
-            addMessage(`<strong class="text-red-500">RAPIDAPI ERROR:</strong><br><pre class="text-xs bg-red-900/30 p-2 rounded border border-red-500 mt-2 overflow-x-auto">${debugText}</pre>`, false);
-        }
-
-    } catch(e) {
-        if (document.getElementById(loadingId)) {
-            document.getElementById(loadingId).remove();
-        }
-        addMessage(`<strong class="text-red-500">SYSTEM CRASH:</strong> ${e.message}`, false);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 }
