@@ -3,111 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHADOW AI</title>
+    <title>SHADOW AI - Glassmorphism Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=VT323&display=swap');
-        body { font-family: 'VT323', monospace; }
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Poppins:wght@300;400;600&family=VT323&display=swap');
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            overflow: hidden; 
+        }
+        
+        .font-matrix { font-family: 'VT323', monospace; }
+        
         .joker-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.92)),
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)),
                         url('https://media.giphy.com/media/7waKDy5RbDYVG/giphy.gif') center/cover;
             z-index: -2;
         }
-        .logo-gif { width: 130px; height: 130px; border: 4px solid #ff00ff; border-radius: 9999px; box-shadow: 0 0 50px #ff00ff; }
-        .title { font-family: 'Creepster', cursive; text-shadow: 0 0 30px #ff00ff, 0 0 60px #00ff41; }
+
+        .logo-gif { 
+            width: 80px; height: 80px; 
+            border-radius: 50%; 
+            border: 2px solid rgba(255, 0, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.6); 
+        }
+
+        .title { 
+            font-family: 'Creepster', cursive; 
+            text-shadow: 0 0 15px #ff00ff, 0 0 30px #00ff41; 
+            letter-spacing: 2px;
+        }
+
+        /* --- Glassmorphism Styles --- */
+        .glass-main {
+            background: rgba(15, 15, 20, 0.4);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+            border-radius: 24px;
+        }
+
+        .glass-header {
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .glass-user {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 255, 65, 0.02) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 255, 65, 0.05);
+            border-radius: 20px 20px 4px 20px;
+        }
+
+        .glass-bot {
+            background: linear-gradient(135deg, rgba(171, 32, 253, 0.1) 0%, rgba(171, 32, 253, 0.02) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(171, 32, 253, 0.2);
+            box-shadow: 0 4px 15px rgba(171, 32, 253, 0.05);
+            border-radius: 20px 20px 20px 4px;
+        }
+
+        .glass-input-area {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(171, 32, 253, 0.3);
+            border-radius: 0 0 24px 24px;
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            color: #00ff41;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            outline: none;
+            border-color: #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.2);
+            background: rgba(0, 255, 65, 0.05);
+        }
+
+        .glass-btn {
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(171, 32, 253, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(171, 32, 253, 0.6); }
+
+        .active-mode {
+            box-shadow: 0 0 15px currentColor;
+            border-color: currentColor;
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
-<body class="text-[#00ff41]">
+<body class="text-gray-200 h-screen w-screen flex items-center justify-center p-4 lg:p-8">
 
     <div class="joker-bg"></div>
-    <canvas id="matrix" class="fixed inset-0 z-[-1] opacity-20"></canvas>
+    <canvas id="matrix" class="fixed inset-0 z-[-1] opacity-25"></canvas>
 
-    <header class="fixed w-full z-50 bg-black/80 backdrop-blur border-b border-purple-500">
-        <div class="max-w-6xl mx-auto px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-5">
-                <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="logo-gif">
+    <div class="glass-main w-full max-w-6xl h-full max-h-[900px] flex flex-col relative z-10">
+        
+        <header class="glass-header px-6 py-4 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-4">
+                <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="logo-gif" alt="Shadow AI Logo">
                 <div>
-                    <h1 class="title text-5xl">SHADOW AI</h1>
-                    <p class="text-purple-400">CHAOS • IMAGE • VIDEO</p>
+                    <h1 class="title text-4xl sm:text-5xl text-white">SHADOW AI</h1>
+                    <p class="font-matrix text-purple-400 text-lg tracking-widest mt-[-5px]">POWERED BY GPT-4O</p>
                 </div>
             </div>
-            <button onclick="clearChat()" class="px-8 py-3 border border-red-500 text-red-400 hover:bg-red-600 hover:text-black">RESET CHAOS</button>
+            <button onclick="clearChat()" class="glass-btn px-6 py-2.5 rounded-full text-red-400 border-red-500/50 hover:bg-red-500/20 hover:text-red-300 hover:shadow-[0_0_15px_rgba(239,68,68,0.4)] flex items-center gap-2 text-sm uppercase tracking-wider font-semibold">
+                <i class="fas fa-skull"></i> Reset
+            </button>
+        </header>
+
+        <div id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth">
+            <div class="flex gap-4 opacity-80">
+                <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 shadow-[0_0_10px_#ff00ff]">
+                <div class="glass-bot p-5 text-[15px] leading-relaxed max-w-2xl text-[#d8b4fe]">
+                    <span class="font-matrix text-xl text-[#00ff41]">SYSTEM INITIATED...</span><br>
+                    Welcome to the shadows. I am now connected to the GPT-4o mainframe. What chaos shall we weave today?
+                </div>
+            </div>
         </div>
-    </header>
 
-    <div class="pt-28 flex h-screen">
-        <div class="flex-1 max-w-5xl mx-auto flex flex-col">
-            <div id="chatContainer" class="flex-1 overflow-y-auto p-8 space-y-8"></div>
-
-            <!-- Input + Buttons -->
-            <div class="p-6 bg-black/90 border-t-4 border-purple-600">
-                <div class="flex gap-3 mb-4">
-                    <button onclick="setMode('text')" id="btn-text" class="flex-1 py-3 bg-purple-700 hover:bg-purple-600">💬 Text</button>
-                    <button onclick="setMode('image')" id="btn-image" class="flex-1 py-3 bg-pink-700 hover:bg-pink-600">🖼️ Image</button>
-                    <button onclick="setMode('video')" id="btn-video" class="flex-1 py-3 bg-red-700 hover:bg-red-600">🎥 Video</button>
-                </div>
+        <div class="glass-input-area p-6 shrink-0">
+            <div class="flex gap-4 mb-4 max-w-md">
+                <button onclick="setMode('text')" id="btn-text" class="glass-btn flex-1 py-2.5 rounded-xl text-purple-400 border-purple-500/30 hover:bg-purple-500/10 font-semibold text-sm flex justify-center items-center gap-2">
+                    <i class="fas fa-comment-dots"></i> Text
+                </button>
+            </div>
+            
+            <div class="relative flex gap-3">
+                <textarea id="userInput" rows="2" class="glass-input w-full p-4 pr-16 text-lg font-matrix resize-none placeholder:text-gray-500" placeholder="Embrace the chaos... type your prompt here..." onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); sendMessage(); }"></textarea>
                 
-                <div class="relative">
-                    <textarea id="userInput" rows="3" class="w-full bg-black border-2 border-[#00ff41] p-6 text-xl" placeholder="Describe what you want..."></textarea>
-                    <button onclick="sendMessage()" class="absolute bottom-6 right-6 bg-white text-black px-10 py-5 font-bold">GENERATE CHAOS →</button>
-                </div>
+                <button onclick="sendMessage()" class="absolute right-3 bottom-3 top-3 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:from-purple-500 hover:to-pink-500 transition-all shadow-[0_0_15px_rgba(171,32,253,0.4)] flex items-center justify-center group">
+                    <i class="fas fa-paper-plane group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        const API_KEY = process.env.GEMINI_API_KEY || "YOUR_API_KEY_HERE";
-        let mode = "text"; // text, image, video
-        let history = [];
+        let mode = "text"; 
 
-        // Matrix Rain (same as before)
+        // Matrix Rain
         const canvas = document.getElementById('matrix');
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const chars = "01JOKERCHAOS";
-        const fontSize = 14;
-        const columns = canvas.width/fontSize;
-        const drops = Array(Math.floor(columns)).fill(1);
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const chars = "01JOKERCHAOS!@#$%^&*()";
+        const fontSize = 16;
+        const columns = Math.floor(canvas.width / fontSize) + 1;
+        let drops = [];
+        for(let x = 0; x < columns; x++) drops[x] = 1;
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#00ff41';
-            ctx.font = fontSize + "px monospace";
-            for(let i = 0; i < drops.length; i++){
-                ctx.fillText(chars[Math.floor(Math.random()*chars.length)], i*fontSize, drops[i]*fontSize);
-                if(drops[i]*fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            ctx.font = fontSize + "px 'VT323', monospace";
+            for(let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
                 drops[i]++;
             }
         }
-        setInterval(drawMatrix, 35);
+        setInterval(drawMatrix, 33);
 
         function setMode(m) {
             mode = m;
-            document.querySelectorAll('button[id^="btn-"]').forEach(b => b.classList.remove('ring-4', 'ring-white'));
-            document.getElementById(`btn-${m}`).classList.add('ring-4', 'ring-white');
+            document.getElementById(`btn-${m}`).classList.add('active-mode');
         }
 
-        function addMessage(text, isUser, imageUrl = null) {
+        function addMessage(text, isUser) {
             const chat = document.getElementById('chatContainer');
             const div = document.createElement('div');
-            div.className = isUser ? 'flex justify-end' : 'flex gap-4';
+            div.className = `flex ${isUser ? 'justify-end' : 'justify-start gap-4'} animate-fade-in`;
 
-            let content = isUser ? 
-                `<div class="max-w-xl bg-black/70 border border-[#00ff41] p-5">${text}</div>` : 
-                `<div>
-                    <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-12 h-12 rounded-full">
-                    <div class="max-w-2xl bg-black/80 border border-purple-500 p-6">${text}</div>
-                 </div>`;
-
-            if (imageUrl) {
-                content += `<img src="${imageUrl}" class="max-w-lg mt-4 rounded border border-purple-400">`;
+            if (isUser) {
+                div.innerHTML = `<div class="glass-user p-4 text-[15px] text-[#00ff41] max-w-xl font-matrix text-lg tracking-wide">${text}</div>`;
+            } else {
+                div.innerHTML = `
+                <div class="shrink-0">
+                    <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 shadow-[0_0_10px_#ff00ff]">
+                </div>
+                <div class="glass-bot p-5 text-[15px] leading-relaxed max-w-2xl text-gray-200">
+                    <div>${text.replace(/\n/g, '<br>')}</div>
+                </div>`;
             }
-
-            div.innerHTML = content;
             chat.appendChild(div);
             chat.scrollTop = chat.scrollHeight;
         }
@@ -118,50 +220,60 @@
             if (!prompt) return;
 
             addMessage(prompt, true);
-            history.push({role: "user", content: prompt});
             input.value = "";
+            input.focus();
 
-            const loading = document.createElement('div');
-            loading.innerHTML = `<div class="flex gap-4"><img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-12 h-12"><div class="p-6 border border-purple-500">Generating ${mode}...</div></div>`;
-            document.getElementById('chatContainer').appendChild(loading);
+            const loadingId = 'loading-' + Date.now();
+            const chat = document.getElementById('chatContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = loadingId;
+            loadingDiv.className = 'flex gap-4 animate-pulse';
+            loadingDiv.innerHTML = `
+                <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 opacity-50">
+                <div class="glass-bot p-4 text-[#00ff41] font-matrix tracking-widest text-lg flex items-center gap-2">
+                    <i class="fas fa-circle-notch fa-spin"></i> GENERATING CHAOS...
+                </div>`;
+            chat.appendChild(loadingDiv);
+            chat.scrollTop = chat.scrollHeight;
 
             try {
-                let responseText = "Chaos created.";
+                // Vercel Serverless Function এ রিকোয়েস্ট পাঠানো হচ্ছে
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                
+                const data = await res.json();
+                document.getElementById(loadingId).remove();
 
-                if (mode === "image" || mode === "video") {
-                    responseText = `Here's your \( {mode} based on: " \){prompt}"`;
-                    // In real implementation, you would call Imagen 3 or Veo via Google API
-                    // For now using placeholder
-                    const fakeUrl = mode === "image" ? 
-                        `https://picsum.photos/id/${Math.floor(Math.random()*100)}/800/600` : 
-                        "https://media.giphy.com/media/7waKDy5RbDYVG/giphy.gif";
-                    
-                    addMessage(responseText, false, fakeUrl);
-                } else {
-                    // Normal text chat
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-                        method: "POST",
-                        headers: {"Content-Type": "application/json"},
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    });
-                    const data = await res.json();
-                    responseText = data.candidates[0].content.parts[0].text;
-                    addMessage(responseText, false);
+                if (data.error) {
+                    throw new Error(data.error);
                 }
+                
+                // OpenAI / RapidAPI Data Parsing
+                const responseText = data.choices[0].message.content;
+                addMessage(responseText, false);
+
             } catch(e) {
-                addMessage("THE JOKER LAUGHED... TRY AGAIN.", false);
+                console.error(e);
+                document.getElementById(loadingId).remove();
+                addMessage("SYSTEM ERROR: The Joker laughed too hard. Server connection failed.", false);
             }
-            loading.remove();
         }
 
         function clearChat() {
-            if(confirm("ERASE ALL CHAOS?")) {
-                document.getElementById('chatContainer').innerHTML = '';
-                history = [];
-            }
+            const chat = document.getElementById('chatContainer');
+            chat.innerHTML = `
+                <div class="flex gap-4 opacity-80">
+                    <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 shadow-[0_0_10px_#ff00ff]">
+                    <div class="glass-bot p-5 text-[15px] leading-relaxed max-w-2xl text-[#d8b4fe]">
+                        <span class="font-matrix text-xl text-red-500">CHAOS RESET COMPLETE...</span><br>
+                        Memory wiped. We begin again. What is your desire?
+                    </div>
+                </div>`;
         }
 
-        // Default mode
         setMode('text');
     </script>
 </body>
