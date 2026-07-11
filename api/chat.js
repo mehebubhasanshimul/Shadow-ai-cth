@@ -1,53 +1,32 @@
-async function sendMessage() {
-    const input = document.getElementById('userInput');
-    let prompt = input.value.trim();
-    if (!prompt) return;
-
-    addMessage(prompt, true);
-    input.value = "";
-
-    const loadingId = 'loading-' + Date.now();
-    const chat = document.getElementById('chatContainer');
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = loadingId;
-    loadingDiv.className = 'flex gap-4 animate-pulse';
-    loadingDiv.innerHTML = `
-        <img src="https://media.giphy.com/media/8YmZ14DOpivXMuckSI/giphy.gif" class="w-10 h-10 rounded-full border border-purple-500 opacity-50">
-        <div class="glass-bot p-4 text-[#00ff41] font-matrix tracking-widest text-lg flex items-center gap-2">
-            <i class="fas fa-circle-notch fa-spin"></i> GENERATING CHAOS...
-        </div>`;
-    chat.appendChild(loadingDiv);
-    chat.scrollTop = chat.scrollHeight;
-
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  
+    const { prompt } = req.body;
+    const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY; 
+  
+    const options = {
+        method: 'POST',
+        headers: {
+            'x-rapidapi-key': RAPIDAPI_KEY,
+            'x-rapidapi-host': 'cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            messages: [{ role: 'user', content: prompt }],
+            model: 'gpt-4o',
+            max_tokens: 500,
+            temperature: 0.9
+        })
+    };
+  
     try {
-        const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
-        });
+        const response = await fetch('https://cheapest-gpt-4-turbo-gpt-4-vision-chatgpt-openai-ai-api.p.rapidapi.com/v1/chat/completions', options);
+        const data = await response.json();
         
-        const data = await res.json();
-        document.getElementById(loadingId).remove();
-        
-        // কনসোলে চেক করার জন্য
-        console.log("Server Response:", data);
-
-        // যদি RapidAPI সঠিক রেসপন্স দেয়
-        if (data.choices && data.choices.length > 0) {
-            const responseText = data.choices[0].message.content;
-            addMessage(responseText, false);
-        } 
-        // যদি RapidAPI কোনো এরর মেসেজ পাঠায়
-        else {
-            const errorText = data.message || data.error || JSON.stringify(data);
-            addMessage(`API REJECTED: ${errorText}`, false);
-        }
-
-    } catch(e) {
-        console.error(e);
-        if (document.getElementById(loadingId)) {
-            document.getElementById(loadingId).remove();
-        }
-        addMessage("SYSTEM ERROR: Failed to parse response.", false);
+        // RapidAPI থেকে যাই আসুক (সফল বা এরর), আমরা ফ্রন্টএন্ডে পাঠিয়ে দেবো
+        res.status(200).json(data);
+    } catch (error) {
+        // যদি fetch করতে গিয়েই কোড ক্র্যাশ করে
+        res.status(200).json({ error: "Fetch Failed: " + error.message });
     }
 }
